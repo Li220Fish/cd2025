@@ -1,52 +1,58 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define MAX_LEN 100
-
-// 定義節點結構
 typedef struct Node {
-    char data;           // 儲存字元
-    struct Node *next;   // 指向下一個節點
+    char data;
+    struct Node *next;
 } Node;
 
 int main(void) {
-    char input[MAX_LEN];
-    // 讀取一行字串 (最多 MAX_LEN-1 個字元)
-    if (fgets(input, MAX_LEN, stdin) == NULL) {
-        return 1;  // 讀取失敗就結束
+    Node *head = NULL, *tail = NULL;
+    FILE *file = fopen("main.c", "r"); 
+    if (file == NULL) {
+        perror("fail to open main.c");
+        return EXIT_FAILURE;
     }
-    // 移除結尾的換行符號（若存在）
-    input[strcspn(input, "\n")] = '\0';
 
-    // 用陣列模擬節點空間
-    Node nodes[MAX_LEN];
-    Node *head = NULL;   // 鏈結串列的頭
-    Node *tail = NULL;   // 鏈結串列的尾
-
-    // 逐字元建立鏈結串列
-    int i;
-    for (i = 0; input[i] != '\0'; i++) {
-        nodes[i].data = input[i];
-        nodes[i].next = NULL;
+    int ch;
+    while ((ch = fgetc(file)) != EOF) {
+        Node *newNode = (Node *)malloc(sizeof(Node));
+        newNode->data = (char)ch;
+        newNode->next = NULL;
 
         if (head == NULL) {
-            // 第一個節點
-            head = &nodes[i];
-            tail = &nodes[i];
+            head = newNode;
+            tail = newNode;
         } else {
-            // 串到尾巴
-            tail->next = &nodes[i];
-            tail = &nodes[i];
+            tail->next = newNode;
+            tail = newNode;
         }
     }
+    fclose(file); 
 
-    // 以兩兩一組的方式輸出
+    int freq[256] = {0};
     Node *current = head;
-    while (current != NULL && current->next != NULL) {
-        printf("%c : %c\n", current->data, current->next->data);
-        // 一次跳過兩個節點 (因為我們是字元 : 下一個字元)
-        current = current->next->next;
+    while (current != NULL) {
+        freq[(unsigned char)current->data]++;
+        current = current->next;
     }
 
-    return 0;
+    current = head;
+    while (current != NULL) {
+        unsigned char c = (unsigned char)current->data;
+        if (freq[c] > 0) {
+            printf("%c: %d\n", c, freq[c]);
+            freq[c] = 0;
+        }
+        current = current->next;
+    }
+
+    current = head;
+    while (current != NULL) {
+        Node *tmp = current;
+        current = current->next;
+        free(tmp);
+    }
+    return EXIT_SUCCESS;
 }
